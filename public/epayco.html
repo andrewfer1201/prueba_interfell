@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Epayco</title>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+	<div id="logo">
+		<img src="icono.png">
+	</div>
+
+	<div id="menu_principal" class="container">
+
+		<div class="row  mt-2 p-3" style=" border: 1px solid; border-radius: 5px;    background-color: #382f2f0d;">
+
+				<div class="col-md-3" id="registrar">
+					<button v-on:click="show = !show" class="btn btn-success">Registrar Cliente</button>
+					  <transition name="fade">
+					  	<div v-if="show" class="p-5" style=" border: 1px solid;">
+					  		<h5 class="text-center">Registrar cliente</h5><hr>
+					  		  <form v-on:submit.prevent="registrar_cliente">
+					  			<label>Documento:</label>
+					  			<input class="form-control" type="text" v-model="documento" required>
+					  			<label>Nombre:</label>
+					  			<input class="form-control" type="text" v-model="nombre" required>
+					  			<label>Email:</label>
+					  			<input class="form-control" type="email" v-model="email" required>
+					  			<label>Celular:</label>
+					  			<input class="form-control" type="text" v-model="celular" required>
+					  			<div class="text-center mt-2">
+					  			  <button type="submit" class="btn btn-primary">Registrar</button>
+					  			  <button v-on:click="limpiar"  title="Limpiar formulario" class="btn btn-danger">X</button>
+					  			</div>
+					  		  </form>
+					  		
+					  	</div>
+					  </transition>
+				</div>
+
+				<div class="col-md-3" id="recarga">
+					<button class="btn btn-primary" v-on:click="show = !show">Recargar Billetera</button>
+					<transition name="fade">
+					  	<div v-if="show" class="p-5" style=" border: 1px solid;">
+						<h5 class="text-center">Recarga</h5><hr>
+						 <form v-on:submit.prevent="recargar_billetera">
+				  			<label>Documento:</label>
+				  			<input class="form-control" v-model="documento" type="text" >
+				  			<label>Celular:</label>
+				  			<input class="form-control" v-model="celular" type="text" >
+				  			<label>Cantidad a recargar:</label>
+				  			<input class="form-control" v-model="cantidad" type="number">
+				  			<div class="text-center mt-2">
+				  			  <button type="submit" class="btn btn-primary">Recargar</button>
+				  			  <button type="button" title="Limpiar formulario" v-on:click="limpiar" class="btn btn-danger">X</button>
+				  			</div>
+						  </form>
+						 
+					  	</div>
+					  </transition>
+				</div>
+
+				<div class="col-md-3" id="pagar">
+					<button class="btn btn-warning"  v-on:click="show = !show">Pagar Compra</button>
+					<transition name="fade">
+					   <form v-on:submit.prevent="pagar">
+						  	<div v-if="show" class="p-5" style=" border: 1px solid;">
+							<h5 class="text-center">Pagar compra</h5><hr>
+							<label>Documento:</label>
+				  			<input class="form-control" v-model="documento" type="text" required>
+				  			<label>Celular:</label>
+				  			<input class="form-control" v-model="celular" type="text" required>
+				  			<label>Total Compra:</label>
+				  			<input class="form-control" v-model="total_compra" type="number" required>
+			  				<hr>
+				  			<div class="text-center"> Token de seguridad: <br>{{token_seguridad}}<br>{{email}}</div>
+				  			<hr>
+				  			
+							 
+
+							 <div class="text-center mt-2">
+					  			  <button type="submit" class="btn btn-primary">Pagar</button>
+					  			  <button type="button" v-on:click="limpiar" title="Limpiar formulario" class="btn btn-danger">X</button>
+					  		</div>
+							<hr>
+
+								<div class="text-center mt-2" id="confirmacion" v-show="div_c">
+						  			<label>Ingrese Token:</label>
+					  				<input class="form-control" v-model="token_confirmacion" type="text" >
+					  			
+					  				<button type="button" v-on:click="confirmar" title="Confirmar pago" class="btn btn-warning mt-2">Confirmar pago</button>
+				  				</div>
+				  			
+						  	</div>
+					  </form>
+					  </transition>
+				</div>
+
+				<div class="col-md-3" id="consulta">
+					<button class="btn btn-danger"  v-on:click="show = !show">Consultar Saldo</button>
+					<transition name="fade">
+						   <form v-on:submit.prevent="consultar">
+						  	<div v-if="show" class="p-5" style=" border: 1px solid;">
+							<h5 class="text-center">Saldo disponible</h5><hr>
+							<label>Documento:</label>
+				  			<input class="form-control" v-model="documento" type="text" >
+				  			<label>Celular:</label>
+				  			<input class="form-control" v-model="celular" type="text" >
+				  			<hr>
+							 <h6 class="text-center">{{mensaje}}</h6> 
+							 <h3 class="text-center">{{saldo}}</h3>
+							 <div class="text-center mt-2">
+					  			  <button type="submit" class="btn btn-primary">Consultar</button>
+					  			  <button type="button" v-on:click="limpiar" title="Limpiar formulario" class="btn btn-danger">X</button>
+					  			</div>
+						  	</div>
+						  </form>
+					  </transition>
+				</div>
+		</div>
+	</div>
+</body>
+
+		<footer>
+			<div class="text-center">
+				Desarrollado por: Andrew Fernandez<br>
+				Herramientas utilizadas: Vue.js y Lumen con Base de datos MySQL
+			</div>
+		</footer>
+</html>
+
+<!--Transiciones----------------------------->
+
+<style type="text/css">
+	.fade-enter-active, .fade-leave-active {
+	transition: opacity .5s
+	}
+	.fade-enter, .fade-leave-to {
+	opacity: 0
+	}
+</style>
+
+<!------------------------------------------>
+
+
+
+<script type="text/javascript">
+
+	new Vue({
+	  el: '#registrar',
+	  data: {
+	    show: false,
+	    documento: '',
+	    nombre:'',
+	    email:'',
+	    celular:''
+	  },
+	  methods: {
+	  	//Funcion para registrar el cliente en la BD
+	  	registrar_cliente: function() {
+	  		axios.get("http://localhost/epayco/public/registrar_cliente", 
+  			{
+	  		 params: {
+		      documento: this.documento,
+		      nombre: this.nombre,
+		      email: this.email,
+		      celular: this.celular
+		    }
+  			})
+		    .then(response => {
+		    	//Muestra el codigo de errore y  el mensaje respectivo.
+		    		alert(response.data.mensaje);
+		    		alert('Codigo error: '+response.data.codigo);
+
+		    	// Una manera sencilla de borrar los campos
+		    		this.nombre= '';
+		    		this.documento = '';
+		    		this.email= '';
+		    		this.celular = '';
+		    })
+	  	},
+	  	limpiar: function(){ //borra los datos del formulario
+	  		this.documento ='';
+		    this.celular ='';
+		    this.email ='';
+		    this.nombre ='';
+	  	}
+	  }
+	})
+
+	new Vue({
+	  el: '#recarga',
+	  data: {
+	    show: false,
+	    documento: '',
+	    celular:'',
+	    cantidad:''
+	  },
+	  methods: {
+	  	//Funcion para registrar el cliente en la BD
+	  	recargar_billetera: function() {
+	  		axios.get("http://localhost/epayco/public/recargar", 
+  			{
+	  		 params: {
+		      documento: this.documento,
+		      celular: this.celular,
+		      cantidad: this.cantidad
+		    }
+  			})
+		    .then(response => {
+		    	//Muestra el codigo de errore y  el mensaje respectivo.
+		    		alert(response.data.mensaje);
+
+		    	// Una manera sencilla de borrar los campos
+		    		this.documento= '';
+		    		this.celular = '';
+		    		this.cantidad= '';
+		    })
+	  	},
+	  	limpiar: function(){ //borra los datos del formulario
+	  		this.documento ='';
+		    this.celular ='';
+		    this.cantidad ='';
+	  	}
+	  }
+	})
+
+
+	new Vue({
+	  el: '#consulta',
+	  data: {
+	    show: false,
+	    documento: '',
+	    celular:'',
+	    saldo:'',
+	    mensaje:'',
+
+	  },
+	  methods: {
+	  	//Funcion para consultar saldo
+	  	consultar: function() {
+	  		axios.get("http://localhost/epayco/public/consulta", 
+  			{
+	  		 params: {
+		      documento: this.documento,
+		      celular: this.celular,
+		    }
+  			})
+		    .then(response => {
+
+		    	if (response.data.saldo !== 0){
+		    		this.mensaje = 'Su saldo disponible es:';
+		    		this.saldo = response.data.saldo[0].cantidad_disponible;
+		    	}
+		 
+		    	
+		    	// Una manera sencilla de borrar los campos
+		    		this.documento= '';
+		    		this.celular = '';
+		    		this.cantidad= '';
+		    })
+	  	},
+	  	limpiar: function(){
+	  		this.mensaje = '';
+	  		this.saldo = '';
+  			this.documento= '';
+    		this.celular = '';
+    		this.cantidad= '';
+
+	  	}
+	  }
+	})
+
+	new Vue({
+	  el: '#pagar',
+	  data: {
+	    show: false,
+	    documento: '',
+	    celular:'',
+	    saldo:'',
+	    mensaje:'',
+	    token_seguridad:'', //token que genera el sistema
+	    token_confirmacion:'', //token que introduce el usuario
+	    total_compra:'',
+	    email:'',
+	    id_sesion:'XYZ', //simula el id de sesion
+	    div_c: false
+
+	  },
+	  methods: {
+	  	//Funcion para realizar una solicitud de pago
+	  	pagar: function() {
+	  		
+	  		axios.get("http://localhost/epayco/public/solicitud_pago", 
+  			{
+	  		 params: {
+		      documento: this.documento,
+		      celular: this.celular,
+		      total_compra:this.total_compra,
+		      id_sesion:this.id_sesion
+
+		    }
+  			})
+		    .then(response => {
+		    	if (response.data.error == true){  //Si hay saldo y todo esta en orden
+
+		    		this.token_seguridad = response.data.token;
+			    	this.email = "Se envio al email: "+response.data.email;
+			    	this.div_c = true;
+
+		    	}else{ //si hay algun error
+		    		alert(response.data.mensaje)
+		    	}
+		    	
+		    	
+		    })
+	  	},
+	  	limpiar: function(){
+	  		this.mensaje = '';
+	  		this.token_seguridad = '';
+	  		this.saldo = '';
+	  		this.email = '';
+  			this.documento= '';
+    		this.celular = '';
+    		this.total_compra= '';
+    		this.div_c = false;
+
+	  	},
+
+	  	confirmar: function(){
+	  			axios.get("http://localhost/epayco/public/confirmacion_pago", 
+  			{
+	  		 params: {
+		      id_sesion: this.id_sesion,
+		      token: this.token_confirmacion, //token que introduce el usuario
+		      cantidad_compra: this.total_compra,
+		      documento: this.documento,
+		      celular: this.celular
+
+		    }
+  			})
+		    .then(response => {
+
+		    	alert(response.data.mensaje)
+		    	//Limpiando campos
+			    this.mensaje = '';
+		  		this.token_seguridad = '';
+		  		this.saldo = '';
+		  		this.email = '';
+	  			this.documento= '';
+	    		this.celular = '';
+	    		this.total_compra= '';
+	    		this.div_c = false;
+		 
+		    })
+
+	  	}
+	  }
+	})
+
+
+
+</script>
